@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Agregar Usuario
+{% endblock %}
+
+{% block main %}
+<div class="container mt-3">
+    <h2>Agregar Usuario</h2>
+    <form id="userForm" method="post">
+        <div class="mb-3">
+            <label for="rut" class="form-label">RUT del Usuario</label>
+            <input id="rut" name="rut" autofocus class="form-control" autocomplete="off" type="text" placeholder="RUT" required>
+        </div>
+        <div class="mb-3">
+            <label for="name_register" class="form-label">Nombre del Usuario</label>
+            <input id="name_register" name="name" autofocus class="form-control" autocomplete="off" type="text" placeholder="Nombre" required>
+        </div>
+        <div class="mb-3">
+            <label for="mail_register" class="form-label">Correo del Usuario</label>
+            <input id="mail_register" name="mail" autofocus class="form-control" autocomplete="off" type="email" placeholder="Correo" required>
+        </div>
+        <div class="mb-3">
+            <label for="password_register" class="form-label">Contraseña del Usuario</label>
+            <input id="password_register" name="password" class="form-control" autocomplete="off" type="password" placeholder="Contraseña" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="password_confirmation_register" class="form-label">Contraseña del Usuario</label>
+            <input id="password_confirmation_register" name="confirmation" class="form-control" autocomplete="off" type="password" placeholder="Confirmar contraseña" required>
+        </div>
+        <div class="mb-3">
+            <label for="permisos" class="form-label">Tipo de Permisos</label>
+            <select id="permisos" class="form-select" name="permisos" required>
+                <option value="normal" selected>Normal</option>
+                <option value="bibliotecario">Bibliotecario</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" type="submit">Registrar Usuario</button>
+    </form>
+</div> 
+<script src="{{ url_for('static', filename='js_scripts/formateaRut.js') }}"></script>
+{% endblock %}

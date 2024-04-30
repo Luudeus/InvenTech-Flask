@@ -1,0 +1,6 @@
+Flask-MySQLdb
+Flask
+Flask-Session
+Jinja2
+python-dotenv
+Werkzeug

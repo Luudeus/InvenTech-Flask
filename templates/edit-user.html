@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Editar Usuario
+{% endblock %}
+
+{% block main %}
+<div class="container mt-3">
+    <h2>Editar Usuario RUT: <span id="formatted-rut">{{ user.RUT }}</span></h2>
+    <form id="edit-user-form" method="post">
+        <!-- Hidden field for formatted RUT -->
+        <input id="hidden_formatted_rut" type="hidden" name="hidden_formatted_rut" value="{{ user.RUT }}">
+
+        <!-- Hidden field for RUT to identify the user -->
+        <input type="hidden" name="rut" value="{{ user.RUT }}">
+
+        <div class="mb-3">
+            <label for="nombre">Nombre:</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" value="{{ user.nombre }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="correo">Correo:</label>
+            <input type="email" class="form-control" id="correo" name="correo" value="{{ user.correo }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="permisos">Permisos:</label>
+            <select type="text" class="form-select" id="permisos" name="permisos" required>
+                <option value="normal" {% if user.permisos == 'normal' %} selected {% endif %}>Normal</option>
+                <option value="bibliotecario" {% if user.permisos == 'bibliotecario' %} selected {% endif %}>Bibliotecario</option>
+            </select>            
+        </div>
+        <a href="/editar-usuarios" class="btn btn-secondary">Volver</a>
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    </form>
+</div>
+<script>
+    function formatRut(rut) {
+        var cleanedRut = rut.replace(/[^0-9kK]/g, "").replace(/k/g, "K");
+    
+        if (cleanedRut !== '' && cleanedRut.length > 1) {
+            var numericPart = cleanedRut.replace(/\./g, "").replace(/-/g, "");
+            if (numericPart.length > 9) {
+                numericPart = numericPart.slice(0, -1);
+            }
+            var mainPart = numericPart.substring(0, numericPart.length - 1);
+            var formattedRut = "";
+            var i;
+            for (i = mainPart.length - 1; i >= 0; i--) {
+                var digit = mainPart.charAt(i);
+                formattedRut = digit + formattedRut;
+                if ((mainPart.length - i) % 3 === 0 && i !== 0) {
+                    formattedRut = "." + formattedRut;
+                }
+            }
+            var dv = numericPart.substring(numericPart.length - 1);
+            formattedRut += "-" + dv;
+            return formattedRut.substring(0, 12);
+        }
+        return cleanedRut;
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var rawRut = "{{ user.RUT }}";
+        var formattedRut = formatRut(rawRut);
+        document.getElementById('formatted-rut').textContent = formattedRut;
+        document.getElementById('hidden_formatted_rut').value = formattedRut;
+    });
+</script>
+{% endblock %}

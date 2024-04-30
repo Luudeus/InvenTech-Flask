@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Editar Préstamo
+{% endblock %}
+
+{% block main %}
+<div class="container mt-3">
+    <h2>Editar Préstamo ID: {{ loan.order_id }} Título del Libro: {{ loan.titulo }}</h2>
+    <form id="edit-user-form" method="post">
+
+        <!-- Hidden field for order_id to identify the loan -->
+        <input type="hidden" name="order_id" value="{{ loan.order_id }}">
+
+        <div class="mb-3">
+            <label for="fecha_entrega">Fecha Entrega:</label>
+            <input type="date" class="form-control" id="fecha_entrega" name="fecha_entrega" value="{{ loan.fecha_entrega }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="fecha_devolucion">Fecha Devolución:</label>
+            <input type="date" class="form-control" id="fecha_devolucion" name="fecha_devolucion" value="{{ loan.fecha_devolucion }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="estado">Estado:</label>
+            <select type="text" class="form-select" id="estado" name="estado" required>
+                <option value="prestado" {% if loan.estado == 'prestado' %} selected {% endif %}>Prestado</option>
+                <option value="devuelto" {% if loan.estado == 'devuelto' %} selected {% endif %}>Devuelto</option>
+            </select>  
+        </div>
+
+        <a href="/editar-libros" class="btn btn-secondary">Volver</a>
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    </form>
+</div>
+{% endblock %}

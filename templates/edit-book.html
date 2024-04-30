@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Editar Libro
+{% endblock %}
+
+{% block main %}
+<div class="container mt-3">
+    <h2>Editar Libro ID: {{ book.id_book }} Título: {{ book.titulo }}</h2>
+    <form id="edit-user-form" method="post">
+
+        <!-- Hidden field for id_book to identify the book -->
+        <input type="hidden" name="id_book" value="{{ book.id_book }}">
+
+        <div class="mb-3">
+            <label for="titulo">Título:</label>
+            <input type="text" class="form-control" id="titulo" name="titulo" value="{{ book.titulo }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="autor">Autor:</label>
+            <input type="text" class="form-control" id="autor" name="autor" value="{{ book.autor }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="anio">Año:</label>
+            <input type="text" class="form-control" id="anio" name="anio" value="{{ book.anio }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="genero">Género:</label>
+            <input type="text" class="form-control" id="genero" name="genero" value="{{ book.genero }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="stock">Stock:</label>
+            <input type="text" class="form-control" id="stock" name="stock" value="{{ book.stock }}" required>
+        </div>
+
+        <a href="/editar-libros" class="btn btn-secondary">Volver</a>
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    </form>
+</div>
+{% endblock %}

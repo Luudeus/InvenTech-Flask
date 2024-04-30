@@ -1,0 +1,301 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Ver Solicitudes
+{% endblock %}
+
+{% block main %}
+<div class="container mt-4">
+<!-- Header: Ver Solicitudes -->
+<h2 class="mb-3 text-start">Ver Solicitudes</h2>
+
+<!-- Search and filter section -->
+<div class="row mb-3 align-items-center">
+    <form class="col">
+        <div class="row g-3 align-items-center">
+            <div class="col">
+                <input type="text" class="form-control" id="search-input" name="busqueda" placeholder="Buscar libros en solicitudes...">
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" type="button" onclick="applySearch()">Buscar</button>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-secondary" type="button" onclick="clearSearch()">Limpiar</button>
+            </div>
+            <div class="col-auto" style="color: #007bff">
+                <span>Ordenar por</span>
+            </div>
+            <div class="col-auto">
+                <select class="form-select" id="orderSelect" onchange="applyOrder()">
+                    <option value="solicitud_id" selected>Solicitud ID</option>
+                    <option value="RUT_User">RUT</option>
+                    <option value="id_book">ID Libro</option>
+                    <option value="titulo_libro">Título</option>
+                    <option value="fecha_solicitud">Fecha Solicitud</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <select class="form-select" id="directionSelect" onchange="applyOrder()">
+                    <option value="ASC" selected>Ascendente</option>
+                    <option value="DESC">Descendente</option>
+                </select>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+    <!-- Table of solicituds -->
+    <div class="table-responsive">
+        <table class="table" id="solicituds-table">
+            <thead>
+                <tr>
+                    <th scope="col">Solicitud ID</th>
+                    <th scope="col">RUT</th>
+                    <th scope="col">ID Libro</th>
+                    <th scope="col">Título</th>
+                    <th scope="col">Fecha Solicitud</th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- The solicitud entries will be dynamically inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>  
+
+    <!-- Pagination buttons -->
+    {{ render_pagination(pagination) }}
+</div>
+
+<script>
+    // Load solicituds when page is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Call updateTable initial solicituds
+        updateTable({{ solicituds|tojson }});
+        // Add event listener to search bar
+        var searchInput = document.getElementById("search-input");
+        searchInput.addEventListener("keypress", function(event) {
+            // Check if key pressed is 'Enter'
+            if (event.key === "Enter") {
+                event.preventDefault(); // Avoid Enter default behaviors
+                applySearch(); // Call applySearch function
+            }
+        });
+    });
+
+    document.addEventListener('click', function(event) {
+        if (event.target.matches('.page-link')) {
+            event.preventDefault(); // Avoid link reloading the page
+            const newUrl = event.target.href;
+            // Update URL
+            history.pushState(null, '', newUrl);
+    
+            // Make an AJAX call with new URL
+            fetch(newUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateTable(data.solicituds);
+                updatePagination(data.total_pages, data.current_page);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
+    
+
+    function applySearch() {
+        var searchTerm = document.getElementById("search-input").value;
+        var newUrl = `/biblioteca?search=${encodeURIComponent(searchTerm)}`;
+
+        history.pushState(null, '', newUrl);
+        fetchDataAndUpdate(newUrl);
+    }
+
+    function updateTable(solicituds) {
+        var tableBody = document.getElementById("solicituds-table").getElementsByTagName("tbody")[0];
+        tableBody.innerHTML = "";
+
+        solicituds.forEach(solicitud => {
+            var row = tableBody.insertRow();
+            row.insertCell(0).textContent = solicitud.solicitud_id;
+            row.insertCell(1).textContent = formatRut(solicitud.RUT_User);
+            row.insertCell(2).textContent = solicitud.id_book;
+            row.insertCell(3).textContent = solicitud.titulo_libro;
+            row.insertCell(4).textContent = solicitud.fecha_solicitud;
+
+            // Action cell
+            var actionsCell = row.insertCell(5);
+            actionsCell.style.display = "flex";
+            actionsCell.style.justifyContent = "center";
+            actionsCell.style.gap = "10px"; // This sets the space between the buttons
+
+            // Accept button
+            var acceptButton = document.createElement('a');
+            acceptButton.href = `/accept-solicitud?id=${solicitud.solicitud_id}`;
+            acceptButton.textContent = 'Aceptar';
+            acceptButton.classList.add('btn', 'btn-primary', 'mr-2'); // Style classes
+            actionsCell.appendChild(acceptButton);
+
+            // Decline button
+            var declineButton = document.createElement('a');
+            declineButton.textContent = 'Declinar';
+            declineButton.classList.add('btn', 'btn-danger');
+            declineButton.onclick = function() {
+                confirmDecline(solicitud.solicitud_id);
+            };
+            actionsCell.appendChild(declineButton);
+            
+        });
+    }
+
+    function applyOrder() {
+        var selectedOrder = document.getElementById("orderSelect").value;
+        var selectedDirection = document.getElementById("directionSelect").value;
+
+        // Get the current URL search term
+        var urlParams = new URLSearchParams(window.location.search);
+        var searchTerm = urlParams.get('search') || '';
+
+        // Build new URL including both search and order parameters
+        var newUrl = `/biblioteca?search=${encodeURIComponent(searchTerm)}&o=${selectedOrder}&d=${selectedDirection}`;
+
+        // Update URL
+        history.pushState(null, '', newUrl);
+
+        // Make the AJAX call
+        fetchDataAndUpdate(newUrl);
+    }
+   
+    function clearSearch() {
+        var newUrl = `/biblioteca`;
+    
+        history.pushState(null, '', newUrl);
+    
+        // Make the AJAX call to reload data
+        fetch(newUrl, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            updateTable(data.solicituds);
+            updatePagination(data.total_pages, data.current_page);
+            // Clean search field
+            document.getElementById("search-input").value = "";
+            // Set order fields to default values
+            document.getElementById("orderSelect").value = "solicitud_id";
+            document.getElementById("directionSelect").value = "ASC";
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+    
+    function updatePagination(totalPages, currentPage) {
+        const paginationContainer = document.querySelector('.pagination');
+        paginationContainer.innerHTML = ''; // Clear existing pagination buttons
+    
+        // Include current search and order parameters in the pagination links
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchTerm = urlParams.get('search') || '';
+        const order = urlParams.get('o') || 'titulo';
+        const direction = urlParams.get('d') || 'ASC';
+    
+        for (let i = 1; i <= totalPages; i++) {
+            const pageLink = document.createElement('a');
+            // Mantain current search and order parameters in the pagination links
+            urlParams.set('page', i);
+            pageLink.href = `?${urlParams.toString()}`;
+            pageLink.innerText = i;
+            pageLink.className = 'page-link';
+            if (i === currentPage) {
+                pageLink.classList.add('active');
+            }
+    
+            const pageItem = document.createElement('li');
+            pageItem.className = i === currentPage ? 'page-item active' : 'page-item';
+            pageItem.appendChild(pageLink);
+    
+            paginationContainer.appendChild(pageItem);
+        }
+    }
+
+    function fetchDataAndUpdate(url) {
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            updateTable(data.solicituds);
+            updatePagination(data.total_pages, data.current_page);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function formatRut(rut) {
+        var cleanedRut = rut.replace(/[^0-9kK]/g, "").replace(/k/g, "K");
+    
+        if (cleanedRut !== '' && cleanedRut.length > 1) {
+            var numericPart = cleanedRut.replace(/\./g, "").replace(/-/g, "");
+            if (numericPart.length > 9) {
+                numericPart = numericPart.slice(0, -1);
+            }
+            var mainPart = numericPart.substring(0, numericPart.length - 1);
+            var formattedRut = "";
+            var i;
+            for (i = mainPart.length - 1; i >= 0; i--) {
+                var digit = mainPart.charAt(i);
+                formattedRut = digit + formattedRut;
+                if ((mainPart.length - i) % 3 === 0 && i !== 0) {
+                    formattedRut = "." + formattedRut;
+                }
+            }
+            var dv = numericPart.substring(numericPart.length - 1);
+            formattedRut += "-" + dv;
+            return formattedRut.substring(0, 12);
+        }
+        return cleanedRut;
+    }
+
+    function confirmDecline(solicitudId) {
+        var confirmation = confirm("¿Estás seguro de rechazar esta solicitud?");
+        if (confirmation) {
+            window.location.href = `/decline-solicitud?id=${solicitudId}`;
+        }
+    }
+    
+</script>
+{% endblock %}
+
+
+{% macro render_pagination(pagination) %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% for p in pagination.iter_pages() %}
+                {% if p %}
+                    {% if p != pagination.page %}
+                        <li class="page-item"><a class="page-link" href="{{ url_for('biblioteca', page=p) }}">{{ p }}</a></li>
+                    {% else %}
+                        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+{% endmacro %}

@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Agregar Libro
+{% endblock %}
+
+{% block main %}
+<div class="container mt-3">
+    <h2>Agregar Libro</h2>
+    <form id="bookForm" method="post">
+        <div class="mb-3">
+            <label for="inputTitle" class="form-label">Título del Libro</label>
+            <input type="text" class="form-control" name="titulo" id="inputTitle" placeholder="Ej: Cien Años de Soledad" required>
+        </div>
+        <div class="mb-3">
+            <label for="inputAuthor" class="form-label">Nombre del Autor</label>
+            <input type="text" class="form-control" name="autor" id="inputAuthor" placeholder="Ej: Gabriel García Márquez" required>
+        </div>
+        <div class="mb-3">
+            <label for="inputYear" class="form-label">Año de Publicación</label>
+            <input type="number" class="form-control" name="anio" id="inputYear" placeholder="Ej: 1967" min="1900" max="2023" required>
+        </div>
+        <div class="mb-3">
+            <label for="selectGenre" class="form-label">Género del Libro</label>
+            <select class="form-select" name="genero" id="selectGenre" required>
+                <option disabled selected>Seleccione...</option>
+                <option value="accion">Acción</option>
+                <option value="aventura">Aventura</option>
+                <option value="biografia">Biografía</option>
+                <option value="ciencia-ficcion">Ciencia Ficción</option>
+                <option value="cuento">Cuento</option>
+                <option value="fantasia">Fantasía</option>
+                <option value="historia">Historia</option>
+                <option value="horror">Horror</option>
+                <option value="misterio">Misterio</option>
+                <option value="poesia">Poesía</option>
+                <option value="romance">Romance</option>
+                <option value="autoayuda">Autoayuda</option>
+                <option value="ensayo">Ensayo</option>
+                <option value="filosofia">Filosofía</option>
+                <option value="humor">Humor</option>
+                <option value="infantil">Infantil</option>
+                <option value="juvenil">Juvenil</option>
+                <option value="novela-historica">Novela Histórica</option>
+                <option value="novela-negra">Novela Negra</option>
+                <option value="politica">Política</option>
+                <option value="psicologia">Psicología</option>
+                <option value="realismo-magico">Realismo Mágico</option>
+                <option value="ciencia">Ciencia</option>
+                <option value="tecnologia">Tecnología</option>
+                <option value="viajes">Viajes</option>
+                <option value="thriller">Thriller</option>
+                <option value="western">Western</option>
+                <option value="no-ficcion">No Ficción</option>
+                <option value="ficcion-literaria">Ficción Literaria</option>
+                <!-- Añade más opciones según sea necesario --> 
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="inputStock" class="form-label">Stock</label>
+            <input type="number" class="form-control" name="stock" id="inputStock" placeholder="Cantidad disponible" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Registrar Libro</button>
+        <button type="reset" class="btn btn-secondary">Limpiar</button>
+    </form>
+</div>
+{% endblock %}

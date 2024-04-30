@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Registrarse
+{% endblock %}
+
+{% block main %}
+    <div class="text-center mb-4">
+        <span>Ya tienes cuenta? </span>
+        <a href="/login" class="text-primary">Inicia sesión aquí</a>
+    </div>
+    <form action="/register" method="post">
+        <div class="mb-3">
+            <input id="rut" name="rut" autofocus class="form-control mx-auto w-auto" autocomplete="off" type="text" placeholder="RUT" required>
+        </div>
+        <div class="mb-3">
+            <input name="name" autofocus class="form-control mx-auto w-auto" autocomplete="off" type="text" placeholder="Nombre" required>
+        </div>
+        <div class="mb-3">
+            <input name="email" autofocus class="form-control mx-auto w-auto" autocomplete="off" type="text" placeholder="Correo" required>
+        </div>
+        <div class="mb-3">
+            <input name="password" class="form-control mx-auto w-auto" autocomplete="off" type="password" placeholder="Contraseña" required>
+        </div>
+
+        <div class="mb-3">
+            <input name="confirmation" class="form-control mx-auto w-auto" autocomplete="off" type="password" placeholder="Confirmar contraseña" required>
+        </div>
+        <button class="btn btn-primary" type="submit">Registrarse</button>
+    </form>
+    <script src="{{ url_for('static', filename='js_scripts/formateaRut.js') }}"></script>
+{% endblock %}
