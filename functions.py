@@ -31,7 +31,7 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if not session.get("user_id"):
             return redirect("/")
-        elif session.get("permission_type") != "bibliotecario":
+        elif session.get("permission_type") != "admin":
             return redirect("/")
         return f(*args, **kwargs)
     return decorated_function

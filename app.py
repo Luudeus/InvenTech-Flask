@@ -66,7 +66,7 @@ def database_user_register(cursor, rut, name, mail, password, permission="normal
         name (str): The user's name.
         mail (str): The user's email address.
         password (str): The user's password.
-        permission (str, optional): The user's permission level (e.g., "normal" or "bibliotecario").
+        permission (str, optional): The user's permission level (e.g., "normal" or "admin").
                                     Defaults to "normal" if not specified.
 
     Returns:
@@ -86,10 +86,10 @@ def database_user_register(cursor, rut, name, mail, password, permission="normal
     mysql.connection.commit()
 
 
-def search_books(template_name):
+def search_items(template_name):
     # Retrieve query parameters for search, ordering, and pagination
     search_term = request.args.get("search", default="")
-    order = request.args.get("o", default="id_book")
+    order = request.args.get("o", default="id_item")
     direction = request.args.get("d", default="ASC").upper()
     page = request.args.get("page", 1, type=int)
     per_page = 10  # Limit of items per page
@@ -98,23 +98,23 @@ def search_books(template_name):
     cursor = mysql.connection.cursor()
 
     # Start building the SQL query
-    base_query = "SELECT * FROM Book"
+    base_query = "SELECT * FROM Item"
     where_clause = ""
     order_clause = ""
 
     # Add a WHERE clause if a search term is provided
     if search_term:
-        where_clause = " WHERE titulo LIKE %s"
+        where_clause = " WHERE nombre LIKE %s"
 
     # Validate ordering parameters and add ORDER BY clause
-    valid_columns = ["id_book", "titulo", "autor", "anio", "genero", "stock"]
+    valid_columns = ["id_item", "nombre", "marca", "fecha_de_vencimiento", "categoria", "stock"]
     if order in valid_columns and direction in ["ASC", "DESC"]:
         order_clause = f" ORDER BY {order} {direction}"
 
     # Pagination clause
     pagination_clause = f" LIMIT {per_page} OFFSET {(page - 1) * per_page}"
 
-    # Complete SQL query for books
+    # Complete SQL query for items
     query = f"{base_query}{where_clause}{order_clause}{pagination_clause}"
 
     # Execute the query with parameters if needed
@@ -127,37 +127,41 @@ def search_books(template_name):
         print("Error during query execution:", e)
 
     # Fetch the results
-    books = cursor.fetchall()
+    items = cursor.fetchall()
+    
+    # Format dates
+    for item in items:
+        item["fecha_de_vencimiento"] = item["fecha_de_vencimiento"].strftime("%d-%m-%Y")
 
-    # Query for total count of books (for pagination)
-    count_query = "SELECT COUNT(*) FROM Book" + where_clause
+    # Query for total count of items (for pagination)
+    count_query = "SELECT COUNT(*) FROM Item" + where_clause
     cursor.execute(count_query, (f"%{search_term}%",) if search_term else ())
     result = cursor.fetchone()
-    total_books = result["COUNT(*)"] if result else 0
+    total_items = result["COUNT(*)"] if result else 0
 
     # Calculate total pages
-    total_pages = (total_books + per_page - 1) // per_page
+    total_pages = (total_items + per_page - 1) // per_page
 
     cursor.close()
 
     # Check if the request is an AJAX request
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return jsonify(
-            {"books": books, "total_pages": total_pages, "current_page": page}
+            {"items": items, "total_pages": total_pages, "current_page": page}
         )
 
     # Create a Pagination object
-    pagination = Pagination(page=page, per_page=per_page, total_count=total_books)
+    pagination = Pagination(page=page, per_page=per_page, total_count=total_items)
 
-    # Render the template with the fetched books and pagination data
-    return render_template(f"{template_name}.html", books=books, pagination=pagination)
+    # Render the template with the fetched items and pagination data
+    return render_template(f"{template_name}.html", items=items, pagination=pagination)
 
 
 # Route functions
 @app.route("/")
 @login_required
 def index():
-    """Show FuturaLib's homepage"""
+    """Show InvenTech's homepage"""
     return render_template("index.html")
 
 
@@ -205,6 +209,9 @@ def login():
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["RUT"]
+        
+        # Remember name of the user logged in
+        session["name"] = rows[0]["nombre"]
 
         # Remember permission type of the user
         session["permission_type"] = rows[0]["permisos"]
@@ -293,189 +300,187 @@ def quienes_somos():
     return render_template("quienes-somos.html")
 
 
-@app.route("/biblioteca", methods=["GET"])
-def biblioteca():
-    return search_books("biblioteca")
+@app.route("/stock", methods=["GET"])
+def stock():
+    return search_items("stock")
 
 
-@app.route("/agregar-libros", methods=["GET", "POST"])
+@app.route("/agregar-items", methods=["GET", "POST"])
 @admin_required
-def agregar_libro():
+def agregar_item():
     if request.method == "GET":
         # User reached route via GET (as by clicking a link or via redirect)
-        return render_template("agregar-libros.html")
+        return render_template("agregar-items.html")
     else:
-        if not request.form.get("titulo"):
+        if not request.form.get("nombre"):
             flash(
                 "Se debe introducir título.\nTodos los campos son obligarios", "warning"
             )
-            render_template("agregar-libros.html")
-        elif not request.form.get("autor"):
+            render_template("agregar-items.html")
+        elif not request.form.get("marca"):
             flash(
-                "Se debe introducir autor.\nTodos los campos son obligarios", "warning"
+                "Se debe introducir marca.\nTodos los campos son obligarios", "warning"
             )
-            render_template("agregar-libros.html")
-        elif not request.form.get("anio"):
-            flash("Se debe introducir año.\nTodos los campos son obligarios", "warning")
-            render_template("agregar-libros.html")
-        elif not request.form.get("genero"):
+            render_template("agregar-items.html")
+        elif not request.form.get("fecha_de_vencimiento"):
+            flash("Se debe introducir fecha de vencimiento.\nTodos los campos son obligarios", "warning")
+            render_template("agregar-items.html")
+        elif not request.form.get("categoria"):
             flash(
-                "Se debe introducir género.\nTodos los campos son obligarios", "warning"
+                "Se debe introducir categoría.\nTodos los campos son obligarios", "warning"
             )
-            render_template("agregar-libros.html")
+            render_template("agregar-items.html")
         elif not request.form.get("stock"):
             flash(
                 "Se debe introducir stock.\nTodos los campos son obligarios", "warning"
             )
-            render_template("agregar-libros.html")
+            render_template("agregar-items.html")
         # User reached route via POST (as by submitting a form)
-        titulo = request.form.get("titulo")
-        autor = request.form.get("autor")
-        anio = request.form.get("anio")
-        genero = request.form.get("genero")
+        nombre = request.form.get("nombre")
+        marca = request.form.get("marca")
+        fecha_de_vencimiento = request.form.get("fecha_de_vencimiento")
+        categoria = request.form.get("categoria")
         stock = request.form.get("stock")
-        print(titulo, autor, anio, genero, stock)
+        print(nombre, marca, fecha_de_vencimiento, categoria, stock)
 
         cursor = mysql.connection.cursor()
         try:
             # Asegúrate de que los nombres de las columnas en la consulta coincidan con tu esquema de DB
-            query = "INSERT INTO Book (titulo, autor, anio, genero, stock) VALUES (%s, %s, %s, %s, %s)"
-            cursor.execute(query, (titulo, autor, anio, genero, stock))
+            query = "INSERT INTO Item (nombre, marca, fecha_de_vencimiento, categoria, stock) VALUES (%s, %s, %s, %s, %s)"
+            cursor.execute(query, (nombre, marca, fecha_de_vencimiento, categoria, stock))
         except Exception as e:
-            print("No se pudo registrar el libro:", e)
-            flash("No se pudo registrar el libro.", "warning")
-            return render_template("agregar-libros.html")
+            print("No se pudo registrar el item:", e)
+            flash("No se pudo registrar el item.", "warning")
+            return render_template("agregar-items.html")
 
         mysql.connection.commit()
         cursor.close()
 
-        # Flash book creation success
+        # Flash item creation success
         flash(
-            f"Libro creado correctamente.\nTítulo: {titulo}\nAutor: {autor}\nAño: {anio}\nGénero: {genero}\nStock: {stock}",
+            f"Item creado correctamente.\nNombre: {nombre}\nMarca: {marca}\nFecha de vencimiento: {fecha_de_vencimiento}\nCategoría: {categoria}\nStock: {stock}",
             "success",
         )
-        return render_template("agregar-libros.html")
+        return render_template("agregar-items.html")
 
 
-@app.route("/editar-libros", methods=["GET"])
+@app.route("/editar-items", methods=["GET"])
 @admin_required
-def editar_libros():
-    return search_books("editar-libros")
+def editar_items():
+    return search_items("editar-items")
 
 
-@app.route("/edit-book", methods=["GET", "POST"])
+@app.route("/edit-item", methods=["GET", "POST"])
 @admin_required
-def edit_book():
+def edit_item():
     if request.method == "GET":
-        # Get the book ID from the query parameter
-        book_id = request.args.get("id")
-        if not book_id:
-            flash("No se proporcionó la ID del libro", "warning")
-            return redirect(url_for("editar_libros"))
+        # Get the item ID from the query parameter
+        item_id = request.args.get("id")
+        if not item_id:
+            flash("No se proporcionó la ID del item", "warning")
+            return redirect(url_for("editar_items"))
 
         # Connect to the database
         cursor = mysql.connection.cursor()
 
-        # Retrieve the book's data
+        # Retrieve the item's data
         try:
             cursor.execute(
-                "SELECT id_book, titulo, autor, anio, genero, stock FROM Book WHERE id_book = %s",
-                (book_id,),
+                "SELECT id_item, nombre, marca, fecha_de_vencimiento, categoria, stock FROM Item WHERE id_item = %s",
+                (item_id,),
             )
-            book = cursor.fetchone()
+            item = cursor.fetchone()
         except Exception as e:
-            print("No se pudieron obtener los datos del libro:", e)
-            flash("No se pudieron obtener los datos del libro", "warning")
-            return redirect(url_for("editar_libros"))
+            print("No se pudieron obtener los datos del item:", e)
+            flash("No se pudieron obtener los datos del item", "warning")
+            return redirect(url_for("editar_items"))
 
         cursor.close()
 
-        # Check if the book exists
-        if not book:
-            flash("Libro no encontrado", "warning")
-            return redirect(url_for("editar_libros"))
+        # Check if the item exists
+        if not item:
+            flash("Item no encontrado", "warning")
+            return redirect(url_for("editar_items"))
 
-        # Render the edit-book.html template passing the book's data
-        return render_template("edit-book.html", book=book)
+        # Render the edit-item.html template passing the item's data
+        return render_template("edit-item.html", item=item)
     else:
-        # POST request logic for updating book details
+        # POST request logic for updating item details
         try:
-            # Retrieve the book ID and form data
-            book_id = request.form.get("id_book")
-            titulo = request.form.get("titulo")
-            autor = request.form.get("autor")
-            anio = request.form.get("anio")
-            genero = request.form.get("genero")
+            # Retrieve the item ID and form data
+            item_id = request.form.get("id_item")
+            nombre = request.form.get("nombre")
+            marca = request.form.get("marca")
+            fecha_de_vencimiento = request.form.get("fecha_de_vencimiento")
+            categoria = request.form.get("categoria")
             stock = request.form.get("stock")
 
-            # Check if the book exists
+            # Check if the item exists
             cursor = mysql.connection.cursor()
-            cursor.execute("SELECT id_book FROM Book WHERE id_book = %s", (book_id,))
+            cursor.execute("SELECT id_item FROM Item WHERE id_item = %s", (item_id,))
             if cursor.fetchone() is None:
                 cursor.close()
-                flash("Libro no encontrado", "warning")
-                return redirect(url_for("editar_libros"))
+                flash("Item no encontrado", "warning")
+                return redirect(url_for("editar_items"))
 
-            # Update the book's data
+            # Update the item's data
             update_query = """
-                UPDATE Book
-                SET titulo = %s, autor = %s, anio = %s, genero = %s, stock = %s
-                WHERE id_book = %s
+                UPDATE Item
+                SET nombre = %s, marca = %s, fecha_de_vencimiento = %s, categoria = %s, stock = %s
+                WHERE id_item = %s
             """
-            cursor.execute(update_query, (titulo, autor, anio, genero, stock, book_id))
+            cursor.execute(update_query, (nombre, marca, fecha_de_vencimiento, categoria, stock, item_id))
             mysql.connection.commit()
             cursor.close()
-            flash(f"Los datos del libro ID: {book_id} han sido actualizados", "success")
-            return redirect(url_for("editar_libros"))
+            flash(f"Los datos del item ID: {item_id} han sido actualizados", "success")
+            return redirect(url_for("editar_items"))
 
         except Exception as e1:
-            print("Error al actualizar el libro:", e1)
+            print("Error al actualizar el item:", e1)
 
             # Connect to the database
             cursor = mysql.connection.cursor()
 
-            # Retrieve the book's data
+            # Retrieve the item's data
             try:
                 cursor.execute(
-                    "SELECT id_book, titulo, autor, anio, genero, stock FROM Book WHERE id_book = %s",
-                    (book_id,),
+                    "SELECT id_item, nombre, marca, fecha_de_vencimiento, categoria, stock FROM Item WHERE id_item = %s",
+                    (item_id,),
                 )
-                book = cursor.fetchone()
+                item = cursor.fetchone()
             except Exception as e2:
-                print("No se pudieron obtener los datos del libro:", e2)
-                return redirect(url_for("editar_libros"))
+                print("No se pudieron obtener los datos del item:", e2)
+                return redirect(url_for("editar_items"))
 
             cursor.close()
-            flash("Error al actualizar el libro", "warning")
-            return render_template("edit-book.html", book=book)
+            flash("Error al actualizar el item", "warning")
+            return render_template("edit-item.html", item=item)
 
 
-@app.route("/delete-book", methods=["GET"])
+@app.route("/delete-item", methods=["GET"])
 @admin_required
-def delete_book():
-    # Get the book ID from the query parameter
-    book_id = request.args.get("id")
-    if not book_id:
-        flash("No se proporcionó la ID del libro", "warning")
-        return redirect(url_for("editar_libros"))
+def delete_item():
+    # Get the item ID from the query parameter
+    item_id = request.args.get("id")
+    if not item_id:
+        flash("No se proporcionó la ID del item", "warning")
+        return redirect(url_for("editar_items"))
 
     # Connect to the database
     cursor = mysql.connection.cursor()
 
-    # Delete the book by book id
+    # Delete the item by item id
     try:
-        cursor.execute("DELETE FROM Solicitud WHERE id_book = %s", (book_id,))
-        cursor.execute("DELETE FROM Lending WHERE id_book = %s", (book_id,))
-        cursor.execute("DELETE FROM Book WHERE id_book = %s", (book_id,))
+        cursor.execute("DELETE FROM Item WHERE id_item = %s", (item_id,))
         mysql.connection.commit()
     except Exception as e:
-        print("No se pudo eliminar el libro:", e)
-        flash("No se pudo eliminar el libro", "warning")
-        return render_template("editar-libros.html")
+        print("No se pudo eliminar el item:", e)
+        flash("No se pudo eliminar el item", "warning")
+        return render_template("editar-items.html")
     cursor.close()
 
-    flash(f"Se eliminó el libro ID: {book_id}", "success")
-    return redirect(url_for("editar_libros"))
+    flash(f"Se eliminó el item ID: {item_id}", "success")
+    return redirect(url_for("editar_items"))
 
 
 @app.route("/agregar-usuarios", methods=["GET", "POST"])
@@ -727,8 +732,6 @@ def delete_user():
 
     # Delete the user by RUT
     try:
-        cursor.execute("DELETE FROM Solicitud WHERE RUT_User = %s", (user_rut,))
-        cursor.execute("DELETE FROM Lending WHERE RUT_User = %s", (user_rut,))
         cursor.execute("DELETE FROM User WHERE RUT = %s", (user_rut,))
         mysql.connection.commit()
     except Exception as e:
@@ -739,484 +742,6 @@ def delete_user():
 
     flash(f"Se eliminó el usuario RUT: {rut_format(user_rut)}", "success")
     return redirect(url_for("editar_usuarios"))
-
-
-@app.route("/ver-prestamos", methods=["GET"])
-@admin_required
-def ver_prestamos():
-    # Retrieve query parameters for search, ordering, and pagination
-    search_term = request.args.get("search", default="")
-    order = request.args.get("o", default="order_id")
-    direction = request.args.get("d", default="ASC").upper()
-    page = request.args.get("page", 1, type=int)
-    per_page = 10  # Limit of items per page
-
-    # Connect to the database
-    cursor = mysql.connection.cursor()
-
-    # Start building the SQL query
-    base_query = """
-    SELECT 
-        L.order_id, 
-        L.RUT_User, 
-        L.id_book, 
-        B.titulo,
-        L.fecha_entrega, 
-        L.fecha_devolucion, 
-        L.estado 
-    FROM 
-        Lending L
-    JOIN 
-        Book B ON L.id_book = B.id_book
-"""
-
-    where_clause = ""
-    order_clause = ""
-
-    # Add a WHERE clause if a search term is provided
-    if search_term:
-        where_clause = """
-            WHERE 
-                L.order_id LIKE %s 
-                OR L.RUT_User LIKE %s 
-                OR L.id_book LIKE %s
-                OR B.titulo LIKE %s
-                OR L.fecha_entrega LIKE %s 
-                OR L.fecha_devolucion LIKE %s 
-                OR L.estado LIKE %s
-        """
-
-    # Validate ordering parameters and add ORDER BY clause
-    valid_columns = [
-        "L.order_id",
-        "L.RUT_User",
-        "L.id_book",
-        "B.titulo",
-        "L.fecha_entrega",
-        "L.fecha_devolucion",
-        "L.estado",
-    ]
-    if order in valid_columns and direction in ["ASC", "DESC"]:
-        order_clause = f" ORDER BY {order} {direction}"
-
-    # Pagination clause
-    pagination_clause = f" LIMIT {per_page} OFFSET {(page - 1) * per_page}"
-
-    # Complete SQL query for loans
-    query = f"{base_query}{where_clause}{order_clause}{pagination_clause}"
-
-    # Execute the query with parameters if needed
-    try:
-        if search_term:
-            cursor.execute(
-                query,
-                (
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                ),
-            )
-        else:
-            cursor.execute(query)
-    except Exception as e:
-        print("Error during query execution:", e)
-
-    # Fetch the results
-    loans = cursor.fetchall()
-
-    # Format dates
-    for loan in loans:
-        loan["fecha_entrega"] = loan["fecha_entrega"].strftime("%d-%m-%Y")
-        if loan["fecha_devolucion"]:
-            loan["fecha_devolucion"] = loan["fecha_devolucion"].strftime("%d-%m-%Y")
-    
-    # Query for total count of loans (for pagination)
-    count_query = "SELECT COUNT(*) FROM Lending" + where_clause
-    cursor.execute(
-        count_query,
-        (
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-        )
-        if search_term
-        else (),
-    )
-    result = cursor.fetchone()
-    total_loans = result["COUNT(*)"] if result else 0
-
-    # Calculate total pages
-    total_pages = (total_loans + per_page - 1) // per_page
-
-    cursor.close()
-
-    # Check if the request is an AJAX request
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify(
-            {"loans": loans, "total_pages": total_pages, "current_page": page}
-        )
-
-    # Create a Pagination object
-    pagination = Pagination(page=page, per_page=per_page, total_count=total_loans)
-
-    # Render the template with fetched loans and pagination data
-    return render_template("ver-prestamos.html", loans=loans, pagination=pagination)
-
-
-@app.route("/edit-loan", methods=["GET", "POST"])
-@admin_required
-def edit_loan():
-    if request.method == "GET":
-        # Get the loan ID from the query parameter
-        loan_id = request.args.get("id")
-        if not loan_id:
-            flash("No se proporcionó la ID del préstamo", "warning")
-            return redirect(url_for("ver_prestamos"))
-
-        # Connect to the database
-        cursor = mysql.connection.cursor()
-
-        # Retrieve the loan's data
-        try:
-            cursor.execute(
-                """
-                SELECT 
-                    L.order_id,
-                    L.fecha_entrega, 
-                    L.fecha_devolucion, 
-                    L.estado,
-                    B.titulo
-                FROM 
-                    Lending L
-                JOIN 
-                    Book B ON L.id_book = B.id_book
-                WHERE 
-                    L.order_id = %s
-                """,
-                (loan_id,),
-            )
-            loan = cursor.fetchone()
-        except Exception as e:
-            print("No se pudieron obtener los datos del prestamo:", e)
-            flash("No se pudieron obtener los datos del prestamo", "warning")
-            return redirect(url_for("ver_prestamos"))
-
-        cursor.close()
-
-        # Check if the loan exists
-        if not loan:
-            flash("Préstamo no encontrado", "warning")
-            return redirect(url_for("ver_prestamos"))
-
-        # Render the edit-loan.html template passing the loan's data
-        return render_template("edit-loan.html", loan=loan)
-    else:
-        # POST request logic for updating loan details
-        try:
-            # Retrieve the loan ID and form data
-            loan_id = request.form.get("order_id")
-            fecha_entrega = request.form.get("fecha_entrega")
-            fecha_devolucion = request.form.get("fecha_devolucion")
-            estado = request.form.get("estado")
-            
-            print(loan_id)
-
-            # Check if the loan exists
-            cursor = mysql.connection.cursor()
-            cursor.execute("SELECT order_id FROM Lending WHERE order_id = %s", (loan_id,))
-            if cursor.fetchone() is None:
-                cursor.close()
-                flash("Préstamo no encontrado", "warning")
-                return redirect(url_for("ver_prestamos"))
-
-            # Update the loan's data
-            update_query = """
-                UPDATE Lending
-                SET fecha_entrega = %s, fecha_devolucion = %s, estado = %s
-                WHERE order_id = %s
-            """
-            cursor.execute(update_query, (fecha_entrega, fecha_devolucion, estado, loan_id))
-            mysql.connection.commit()
-            cursor.close()
-            flash(f"Los datos del préstamo ID: {loan_id} han sido actualizados", "success")
-            return redirect(url_for("ver_prestamos"))
-
-        except Exception as e1:
-            print("Error al actualizar el préstamo:", e1)
-
-            # Connect to the database
-            cursor = mysql.connection.cursor()
-
-            # Retrieve the loan's data
-            try:
-                cursor.execute(
-                    """
-                    SELECT
-                        L.order_id, 
-                        L.fecha_entrega, 
-                        L.fecha_devolucion, 
-                        L.estado,
-                        B.titulo
-                    FROM 
-                        Lending L
-                    JOIN 
-                        Book B ON L.id_book = B.id_book
-                    WHERE 
-                        L.order_id = %s
-                    """,
-                    (loan_id,),
-                )
-                loan = cursor.fetchone()
-            except Exception as e2:
-                print("No se pudieron obtener los datos del préstamo:", e2)
-                return redirect(url_for("ver_prestamos"))
-
-            cursor.close()
-            flash("Error al actualizar el préstamo", "warning")
-            return render_template("edit-loan.html", loan=loan)
-        
-
-@app.route("/mis-prestamos", methods=["GET"])
-@login_required
-def mis_prestamos():
-    # Retrieve query parameters for search, ordering, and pagination
-    search_term = request.args.get("search", default="")
-    order = request.args.get("o", default="order_id")
-    direction = request.args.get("d", default="ASC").upper()
-    page = request.args.get("page", 1, type=int)
-    per_page = 10  # Limit of items per page
-
-    # Connect to the database
-    cursor = mysql.connection.cursor()
-
-    # Start building the SQL query
-    base_query = """
-    SELECT 
-        L.order_id, 
-        L.RUT_User, 
-        L.id_book, 
-        B.titulo,
-        L.fecha_entrega, 
-        L.fecha_devolucion, 
-        L.estado 
-    FROM 
-        Lending L
-    JOIN 
-        Book B ON L.id_book = B.id_book
-"""
-
-    where_clause = f" WHERE RUT_User = '{session['user_id']}'"
-    order_clause = ""
-
-    # Add a WHERE clause if a search term is provided
-    if search_term:
-        where_clause += f" AND (L.order_id LIKE %s OR L.RUT_User LIKE %s OR L.id_book LIKE %s OR B.titulo LIKE %s OR L.fecha_entrega LIKE %s OR L.fecha_devolucion LIKE %s OR L.estado LIKE %s)"
-
-
-    # Validate ordering parameters and add ORDER BY clause
-    valid_columns = [
-        "L.order_id",
-        "L.RUT_User",
-        "L.id_book",
-        "B.titulo",
-        "L.fecha_entrega",
-        "L.fecha_devolucion",
-        "L.estado",
-    ]
-    if order in valid_columns and direction in ["ASC", "DESC"]:
-        order_clause = f" ORDER BY {order} {direction}"
-
-    # Pagination clause
-    pagination_clause = f" LIMIT {per_page} OFFSET {(page - 1) * per_page}"
-
-    # Complete SQL query for loans
-    query = f"{base_query}{where_clause}{order_clause}{pagination_clause}"
-
-    # Execute the query with parameters if needed
-    try:
-        if search_term:
-            cursor.execute(
-                query,
-                (
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                    f"%{search_term}%",
-                ),
-            )
-        else:
-            cursor.execute(query)
-    except Exception as e:
-        print("Error during query execution:", e)
-
-    # Fetch the results
-    loans = cursor.fetchall()
-
-    # Format dates
-    for loan in loans:
-        loan["fecha_entrega"] = loan["fecha_entrega"].strftime("%d-%m-%Y")
-        if loan["fecha_devolucion"]:
-            loan["fecha_devolucion"] = loan["fecha_devolucion"].strftime("%d-%m-%Y")
-    
-    # Query for total count of loans (for pagination)
-    count_query = "SELECT COUNT(*) FROM Lending" + where_clause
-    cursor.execute(
-        count_query,
-        (
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-            f"%{search_term}%",
-        )
-        if search_term
-        else (),
-    )
-    result = cursor.fetchone()
-    total_loans = result["COUNT(*)"] if result else 0
-
-    # Calculate total pages
-    total_pages = (total_loans + per_page - 1) // per_page
-
-    cursor.close()
-
-    # Check if the request is an AJAX request
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify(
-            {"loans": loans, "total_pages": total_pages, "current_page": page}
-        )
-
-    # Create a Pagination object
-    pagination = Pagination(page=page, per_page=per_page, total_count=total_loans)
-
-    # Render the template with fetched loans and pagination data
-    return render_template("mis-prestamos.html", loans=loans, pagination=pagination)
-
-
-@app.route("/solicitar-prestamo", methods=["GET"])
-@login_required
-def solicitar_prestamo():
-    return search_books("solicitar-prestamo")
-
-
-@app.route("/request-book", methods=["GET"])
-@login_required
-def request_book():
-    # Get the book id from the query parameter
-    user_rut = session['user_id']
-    book_id = request.args.get("id")
-    titulo = request.args.get("title")
-    if not book_id:
-        flash("No se proporcionó la ID del libro", "warning")
-        return redirect(url_for("solicitar_prestamo"))
-    
-    # Get current date
-    current_date = datetime.now()
-
-    # Format date, YYYY-MM-DD
-    formatted_date = current_date.strftime("%Y-%m-%d")
-
-    # Connect to the database
-    cursor = mysql.connection.cursor()
-
-    # Insert the request
-    try:
-        cursor.execute("INSERT INTO Solicitud (RUT_User, id_book, titulo_libro, fecha_solicitud) VALUES (%s, %s, %s, %s)", (user_rut, book_id, titulo, formatted_date))
-        mysql.connection.commit()
-    except Exception as e:
-        print("No se pudo enviar la solicitud de préstamo:", e)
-        flash("No se pudo enviar la solicitud de préstamo", "warning")
-        return render_template("solicitar-prestamo.html")
-    cursor.close()
-
-    flash(f"Se envió la solicitud de préstamo: RUT: {rut_format(user_rut)} ID Libro: {book_id} Título: {titulo}", "success")
-    return redirect(url_for("solicitar_prestamo"))    
-
-
-@app.route("/ver-solicitudes", methods=["GET"])
-@admin_required
-def ver_solicitudes():
-    # Retrieve query parameters for search, ordering, and pagination
-    search_term = request.args.get("search", default="")
-    order = request.args.get("o", default="solicitud_id")
-    direction = request.args.get("d", default="ASC").upper()
-    page = request.args.get("page", 1, type=int)
-    per_page = 10  # Limit of items per page
-
-    # Connect to the database
-    cursor = mysql.connection.cursor()
-
-    # Start building the SQL query
-    base_query = "SELECT * FROM Solicitud"
-    where_clause = ""
-    order_clause = ""
-
-    # Add a WHERE clause if a search term is provided
-    if search_term:
-        where_clause = " WHERE solicitud_id LIKE %s OR titulo_libro LIKE %s"
-
-    # Validate ordering parameters and add ORDER BY clause
-    valid_columns = ["solicitud_id", "RUT_User", "id_book", "titulo_libro", "fecha_solicitud"]
-    if order in valid_columns and direction in ["ASC", "DESC"]:
-        order_clause = f" ORDER BY {order} {direction}"
-
-    # Pagination clause
-    pagination_clause = f" LIMIT {per_page} OFFSET {(page - 1) * per_page}"
-
-    # Complete SQL query for solicituds
-    query = f"{base_query}{where_clause}{order_clause}{pagination_clause}"
-
-    # Execute the query with parameters if needed
-    try:
-        if search_term:
-            cursor.execute(query, (f"%{search_term}%", f"%{search_term}%"))
-        else:
-            cursor.execute(query)
-    except Exception as e:
-        print("Error during query execution:", e)
-
-    # Fetch the results
-    solicituds = cursor.fetchall()
-    
-    # Format dates
-    for solicitud in solicituds:
-        solicitud["fecha_solicitud"] = solicitud["fecha_solicitud"].strftime("%d-%m-%Y")
-
-    # Query for total count of solicituds (for pagination)
-    count_query = "SELECT COUNT(*) FROM Solicitud" + where_clause
-    cursor.execute(count_query, (f"%{search_term}%", f"%{search_term}%") if search_term else ())
-    result = cursor.fetchone()
-    total_solicituds = result["COUNT(*)"] if result else 0
-
-    # Calculate total pages
-    total_pages = (total_solicituds + per_page - 1) // per_page
-
-    cursor.close()
-
-    # Check if the solicitud is an AJAX solicitud
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify(
-            {"solicituds": solicituds, "total_pages": total_pages, "current_page": page}
-        )
-
-    # Create a Pagination object
-    pagination = Pagination(page=page, per_page=per_page, total_count=total_solicituds)
-
-    # Render the template with the fetched solicituds and pagination data
-    return render_template("ver-solicitudes.html", solicituds=solicituds, pagination=pagination)
 
 
 if __name__ == "__main__":

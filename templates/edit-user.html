@@ -6,7 +6,7 @@ Editar Usuario
 
 {% block main %}
 <div class="container mt-3">
-    <h2>Editar Usuario RUT: <span id="formatted-rut">{{ user.RUT }}</span></h2>
+    <h2>Editar Usuario RUT: <span id="formatted-rut" style="color: #dc3545">{{ user.RUT }}</span></h2>
     <form id="edit-user-form" method="post">
         <!-- Hidden field for formatted RUT -->
         <input id="hidden_formatted_rut" type="hidden" name="hidden_formatted_rut" value="{{ user.RUT }}">
@@ -32,7 +32,7 @@ Editar Usuario
             </select>            
         </div>
         <a href="/editar-usuarios" class="btn btn-secondary">Volver</a>
-        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        <button type="submit" class="btn btn-danger">Guardar Cambios</button>
     </form>
 </div>
 <script>

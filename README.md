@@ -1,9 +1,9 @@
 # Instrucciones:
 ### Requerimientos
 - Para instalar todas las librerías necesarias, una vez en el directorio del proyecto, usar `pip install -r requirements.txt`
-- Para la base de datos, abrir el archivo [SGDB_script.sql](/SGDB_script.sql) en MySQL Workbench, y luego darle al rayo.
+- Para la base de datos, abrir el archivo [INVENTECH_script.sql](/INVENTECH_script.sql) en MySQL Workbench, y luego darle al rayo.
   - La contraseña de todos los usuarios de ejemplo es `ola123`
-  - Todos los usuarios de ejemplo tienen permisos normales excepto `12.345.678-9`, que tiene permisos de bibliotecario
+  - Todos los usuarios de ejemplo tienen permisos normales excepto `12.345.678-9`, que tiene permisos de admin
 ### Cómo correr la página de forma local
 - Usar `python -m flask run` para echar a correr flask
 ### Cómo ingresar las credenciales de la base de datos

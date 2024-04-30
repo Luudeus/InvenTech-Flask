@@ -7,7 +7,7 @@
 {% block main %}
     <div class="text-center mb-4">
         <span>Ya tienes cuenta? </span>
-        <a href="/login" class="text-primary">Inicia sesión aquí</a>
+        <a href="/login" class="text-danger">Inicia sesión aquí</a>
     </div>
     <form action="/register" method="post">
         <div class="mb-3">
@@ -26,7 +26,7 @@
         <div class="mb-3">
             <input name="confirmation" class="form-control mx-auto w-auto" autocomplete="off" type="password" placeholder="Confirmar contraseña" required>
         </div>
-        <button class="btn btn-primary" type="submit">Registrarse</button>
+        <button class="btn btn-danger" type="submit">Registrarse</button>
     </form>
     <script src="{{ url_for('static', filename='js_scripts/formateaRut.js') }}"></script>
 {% endblock %}

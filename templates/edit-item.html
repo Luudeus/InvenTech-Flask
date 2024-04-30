@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Editar Item
+{% endblock %}
+
+{% block main %}
+<div class="container mt-3">
+    <h2>Editar Item ID: <span style="color: #dc3545">{{ item.id_item }}</span> Nombre: <span style="color: #dc3545">{{ item.nombre }}</span></h2>
+    <form id="edit-user-form" method="post">
+
+        <!-- Hidden field for id_item to identify the item -->
+        <input type="hidden" name="id_item" value="{{ item.id_item }}">
+
+        <div class="mb-3">
+            <label for="nombre">Nombre:</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" value="{{ item.nombre }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="marca">Marca:</label>
+            <input type="text" class="form-control" id="marca" name="marca" value="{{ item.marca }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="fecha_de_vencimiento">Fecha de Vencimiento:</label>
+            <input type="date" class="form-control" id="fecha_de_vencimiento" name="fecha_de_vencimiento" value="{{ item.fecha_de_vencimiento }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="categoria">Categoría:</label>
+            <input type="text" class="form-control" id="categoria" name="categoria" value="{{ item.categoria }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="stock">Stock:</label>
+            <input type="text" class="form-control" id="stock" name="stock" value="{{ item.stock }}" required>
+        </div>
+
+        <a href="/editar-items" class="btn btn-secondary">Volver</a>
+        <button type="submit" class="btn btn-danger">Guardar Cambios</button>
+    </form>
+</div>
+{% endblock %}

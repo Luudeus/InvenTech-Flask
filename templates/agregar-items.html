@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Agregar Item
+{% endblock %}
+
+{% block main %}
+<div class="container mt-3">
+    <h2>Agregar Item</h2>
+    <form id="itemForm" method="post">
+        <div class="mb-3">
+            <label for="inputTitle" class="form-label">Nombre</label>
+            <input type="text" class="form-control" name="nombre" id="inputTitle" placeholder="Ej: Leche Entera Natural 1 L" required>
+        </div>
+        <div class="mb-3">
+            <label for="inputAuthor" class="form-label">Marca</label>
+            <input type="text" class="form-control" name="marca" id="inputAuthor" placeholder="Ej: Soprole" required>
+        </div>
+        <div class="mb-3">
+            <label for="inputDate" class="form-label">Fecha de Vencimiento</label>
+            <input type="date" class="form-control" name="fecha_de_vencimiento" id="inputDate"required>
+        </div>
+        <div class="mb-3">
+            <label for="selectCategory" class="form-label">Categoría</label>
+            <select class="form-select" name="categoria" id="selectCategory" required>
+                <option disabled selected>Seleccione...</option>
+                <option value="Confitería">Confitería</option>
+                <option value="Frutas y Verduras">Frutas y Verduras</option>
+                <option value="Carnes">Carnes</option>
+                <option value="Pescados y Mariscos">Pescados y Mariscos</option>
+                <option value="Panadería">Panadería</option>
+                <option value="Lácteos">Lácteos</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Cuidado Personal">Cuidado Personal</option>
+                <option value="Limpieza">Limpieza</option>
+                <option value="Productos Congelados">Productos Congelados</option>
+                <option value="Alimentos enlatados">Alimentos enlatados</option>
+                <option value="Pastas y Cereales">Pastas y Cereales</option>
+                <!-- Agrega más opciones según sea necesario --> 
+            </select>            
+        </div>
+        <div class="mb-3">
+            <label for="inputStock" class="form-label">Stock</label>
+            <input type="number" class="form-control" name="stock" id="inputStock" placeholder="Cantidad disponible" required>
+        </div>
+        <button type="submit" class="btn btn-danger">Registrar Item</button>
+        <button type="reset" class="btn btn-secondary">Limpiar</button>
+    </form>
+</div>
+{% endblock %}

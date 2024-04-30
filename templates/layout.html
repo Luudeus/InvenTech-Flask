@@ -18,10 +18,17 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">        <!-- CSS stylesheet -->
         <link href="/static/styles.css" rel="stylesheet">
-        <!-- FuturaLib tab icon -->
-        <link href="/static/favicon.ico" rel="icon">
+        <!-- InvenTech tab icon -->
+        <link href="/static/favicon.svg" rel="icon">
 
         <title>{% block title %}{% endblock %}</title>
+
+        <style>
+            /* Custom styles */
+            .dropdown-menu {
+                margin-top: 0; /* Remove default margin */
+            }
+        </style>
 
     </head>
 
@@ -29,7 +36,7 @@
 
         <nav class="bg-light border navbar navbar-expand-md navbar-light">
             <div class="container-fluid">
-                <a class="navbar-brand" href="/"><img src="/static/logo.png" height="86" width="86"></a>
+                <a class="navbar-brand" href="/"><img src="/static/favicon.svg" height="86" width="86"></a>
                 <button aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-bs-target="#navbar" data-bs-toggle="collapse" type="button">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -38,23 +45,30 @@
                         {% if session["permission_type"] == "normal" or not session["user_id"] %}
                             <li class="nav-item"><a class="nav-link" href="/quienes-somos">Quiénes Somos</a></li>
                         {% endif %}
-                        <li class="nav-item"><a class="nav-link" href="/biblioteca">Biblioteca</a></li>
-                        {% if session["permission_type"] == "normal" %}
-                            <li class="nav-item"><a class="nav-link" href="/mis-prestamos">Mis Préstamos</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/solicitar-prestamo">Solicitar Préstamo</a></li>
-                        {% elif session["permission_type"] == "bibliotecario" %}
-                            <li class="nav-item"><a class="nav-link" href="/agregar-libros">Agregar Libros</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/editar-libros">Editar Libros</a></li>
+                        {% if session["user_id"] %}
+                            <li class="nav-item"><a class="nav-link" href="/stock">Stock</a></li>
+                        {% endif %}
+                        {% if session["permission_type"] == "admin" %}
+                            <li class="nav-item"><a class="nav-link" href="/agregar-items">Agregar Items</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/editar-items">Editar Items</a></li>
                             <li class="nav-item"><a class="nav-link" href="/agregar-usuarios">Agregar Usuarios</a></li>
                             <li class="nav-item"><a class="nav-link" href="/editar-usuarios">Editar Usuarios</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/ver-prestamos">Ver préstamos</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/ver-solicitudes">Ver solicitudes</a></li>
                         {% endif %}
                     </ul>
                     {% if session["user_id"] %}
                         <ul class="navbar-nav ms-auto mt-2">
-                            <li class="nav-item"><a class="nav-link" href="/cuenta">Mi cuenta</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/logout">Cerrar Sesión</a></li>
+                            <li class="nav-item dropdown"> <!-- Add dropdown class to this li -->
+                                <a class="nav-link dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span style="color: #dc3545">{{ session["name"] }} <!-- Dropdown toggle text -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+                                            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                                        </svg>
+                                    </span>
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="userDropdown"> <!-- Add dropdown-menu class -->
+                                    <li><a class="dropdown-item" href="/logout">Cerrar Sesión</a></li>
+                                </ul>
+                            </li>
                         </ul>
                     {% else %}
                         <ul class="navbar-nav ms-auto mt-2">

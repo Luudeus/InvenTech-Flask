@@ -1,39 +1,38 @@
 {% extends "layout.html" %}
 
 {% block title %}
-Ver Préstamos
+Stock
 {% endblock %}
 
 {% block main %}
 <div class="container mt-4">
-<!-- Header: Ver Préstamos -->
-<h2 class="mb-3 text-start">Ver Préstamos</h2>
+<!-- Header: Stock -->
+<h2 class="mb-3 text-start">Stock</h2>
 
 <!-- Search and filter section -->
 <div class="row mb-3 align-items-center">
     <form class="col">
         <div class="row g-3 align-items-center">
             <div class="col">
-                <input type="text" class="form-control" id="search-input" name="busqueda" placeholder="Buscar libros...">
+                <input type="text" class="form-control" id="search-input" name="busqueda" placeholder="Buscar items...">
             </div>
             <div class="col-auto">
-                <button class="btn btn-primary" type="button" onclick="applySearch()">Buscar</button>
+                <button class="btn btn-danger" type="button" onclick="applySearch()">Buscar</button>
             </div>
             <div class="col-auto">
                 <button class="btn btn-secondary" type="button" onclick="clearSearch()">Limpiar</button>
             </div>
-            <div class="col-auto" style="color: #007bff">
+            <div class="col-auto" style="color: #dc3545">
                 <span>Ordenar por</span>
             </div>
             <div class="col-auto">
                 <select class="form-select" id="orderSelect" onchange="applyOrder()">
-                    <option value="L.order_id" selected>ID Préstamo</option>
-                    <option value="L.RUT_User">RUT Usuario</option>
-                    <option value="L.id_book">ID Libro</option>
-                    <option value="B.titulo">Título</option>
-                    <option value="L.fecha_entrega">Fecha Entrega</option>
-                    <option value="L.fecha_devolucion">Fecha Devolución</option>
-                    <option value="L.estado">Estado</option>
+                    <option value="id_item" selected>ID Item</option>
+                    <option value="nombre">Nombre</option>
+                    <option value="marca">Marca</option>
+                    <option value="fecha_de_vencimiento">Fecha de Vencimiento</option>
+                    <option value="categoria">Categoría</option>
+                    <option value="stock">Stock</option>
                 </select>
             </div>
             <div class="col-auto">
@@ -47,23 +46,21 @@ Ver Préstamos
 </div>
 
 
-    <!-- Table of loans -->
+    <!-- Table of items -->
     <div class="table-responsive">
-        <table class="table" id="loans-table">
+        <table class="table" id="items-table">
             <thead>
                 <tr>
-                    <th scope="col">ID Préstamo</th>
-                    <th scope="col">RUT Usuario</th>
-                    <th scope="col">ID Libro</th>
-                    <th scope="col">Título</th>
-                    <th scope="col">Fecha Entrega</th>
-                    <th scope="col">Fecha Devolución</th>
-                    <th scope="col">Estado</th>
-                    <th scope="col">Acciones</th>                    
+                    <th scope="col">ID Item</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Marca</th>
+                    <th scope="col">Fecha de Vencimiento</th>
+                    <th scope="col">Categoría</th>
+                    <th scope="col">Stock</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- The loan entries will be dynamically inserted here by JavaScript -->
+                <!-- The item entries will be dynamically inserted here by JavaScript -->
             </tbody>
         </table>
     </div>  
@@ -73,10 +70,10 @@ Ver Préstamos
 </div>
 
 <script>
-    // Load loans when page is loaded
+    // Load items when page is loaded
     document.addEventListener('DOMContentLoaded', function() {
-        // Call updateTable initial loans
-        updateTable({{ loans|tojson }});
+        // Call updateTable initial items
+        updateTable({{ items|tojson }});
         // Add event listener to search bar
         var searchInput = document.getElementById("search-input");
         searchInput.addEventListener("keypress", function(event) {
@@ -104,7 +101,7 @@ Ver Préstamos
             })
             .then(response => response.json())
             .then(data => {
-                updateTable(data.loans);
+                updateTable(data.items);
                 updatePagination(data.total_pages, data.current_page);
             })
             .catch(error => {
@@ -116,47 +113,24 @@ Ver Préstamos
 
     function applySearch() {
         var searchTerm = document.getElementById("search-input").value;
-        var newUrl = `/ver-prestamos?search=${encodeURIComponent(searchTerm)}`;
+        var newUrl = `/stock?search=${encodeURIComponent(searchTerm)}`;
 
         history.pushState(null, '', newUrl);
         fetchDataAndUpdate(newUrl);
     }
 
-    function updateTable(loans) {
-        var tableBody = document.getElementById("loans-table").getElementsByTagName("tbody")[0];
+    function updateTable(items) {
+        var tableBody = document.getElementById("items-table").getElementsByTagName("tbody")[0];
         tableBody.innerHTML = "";
 
-        loans.forEach(loan => {
+        items.forEach(item => {
             var row = tableBody.insertRow();
-            row.insertCell(0).textContent = loan.order_id;
-            row.insertCell(1).textContent = formatRut(loan.RUT_User);
-            row.insertCell(2).textContent = loan.id_book;
-            row.insertCell(3).textContent = loan.titulo;
-            row.insertCell(4).textContent = loan.fecha_entrega;
-            row.insertCell(5).textContent = loan.fecha_devolucion;
-            row.insertCell(6).textContent = loan.estado;
-
-            // Action cell
-            var actionsCell = row.insertCell(7);
-            actionsCell.style.display = "flex";
-            actionsCell.style.justifyContent = "center";
-            actionsCell.style.gap = "10px"; // This sets the space between the buttons
-
-            // Edit button
-            var editButton = document.createElement('a');
-            editButton.href = `/edit-loan?id=${loan.order_id}`;
-            editButton.textContent = 'Editar';
-            editButton.classList.add('btn', 'btn-primary', 'mr-2'); // Style classes
-            actionsCell.appendChild(editButton);
-
-            // Delete button
-            var deleteButton = document.createElement('a');
-            deleteButton.textContent = 'Eliminar';
-            deleteButton.classList.add('btn', 'btn-danger');
-            deleteButton.onclick = function() {
-                confirmDelete(loan.order_id);
-            };
-            actionsCell.appendChild(deleteButton);
+            row.insertCell(0).textContent = item.id_item;
+            row.insertCell(1).textContent = item.nombre;
+            row.insertCell(2).textContent = item.marca;
+            row.insertCell(3).textContent = item.fecha_de_vencimiento;
+            row.insertCell(4).textContent = item.categoria;
+            row.insertCell(5).textContent = item.stock;
         });
     }
 
@@ -169,7 +143,7 @@ Ver Préstamos
         var searchTerm = urlParams.get('search') || '';
 
         // Build new URL including both search and order parameters
-        var newUrl = `/ver-prestamos?search=${encodeURIComponent(searchTerm)}&o=${selectedOrder}&d=${selectedDirection}`;
+        var newUrl = `/stock?search=${encodeURIComponent(searchTerm)}&o=${selectedOrder}&d=${selectedDirection}`;
 
         // Update URL
         history.pushState(null, '', newUrl);
@@ -179,7 +153,7 @@ Ver Préstamos
     }
    
     function clearSearch() {
-        var newUrl = `/ver-prestamos`;
+        var newUrl = `/stock`;
     
         history.pushState(null, '', newUrl);
     
@@ -192,12 +166,12 @@ Ver Préstamos
         })
         .then(response => response.json())
         .then(data => {
-            updateTable(data.loans);
+            updateTable(data.items);
             updatePagination(data.total_pages, data.current_page);
             // Clean search field
             document.getElementById("search-input").value = "";
             // Set order fields to default values
-            document.getElementById("orderSelect").value = "order_id";
+            document.getElementById("orderSelect").value = "id_item";
             document.getElementById("directionSelect").value = "ASC";
         })
         .catch(error => {
@@ -243,44 +217,12 @@ Ver Préstamos
         })
         .then(response => response.json())
         .then(data => {
-            updateTable(data.loans);
+            updateTable(data.items);
             updatePagination(data.total_pages, data.current_page);
         })
         .catch(error => {
             console.error('Error:', error);
         });
-    }
-
-    function formatRut(rut) {
-        var cleanedRut = rut.replace(/[^0-9kK]/g, "").replace(/k/g, "K");
-    
-        if (cleanedRut !== '' && cleanedRut.length > 1) {
-            var numericPart = cleanedRut.replace(/\./g, "").replace(/-/g, "");
-            if (numericPart.length > 9) {
-                numericPart = numericPart.slice(0, -1);
-            }
-            var mainPart = numericPart.substring(0, numericPart.length - 1);
-            var formattedRut = "";
-            var i;
-            for (i = mainPart.length - 1; i >= 0; i--) {
-                var digit = mainPart.charAt(i);
-                formattedRut = digit + formattedRut;
-                if ((mainPart.length - i) % 3 === 0 && i !== 0) {
-                    formattedRut = "." + formattedRut;
-                }
-            }
-            var dv = numericPart.substring(numericPart.length - 1);
-            formattedRut += "-" + dv;
-            return formattedRut.substring(0, 12);
-        }
-        return cleanedRut;
-    }
-
-    function confirmDelete(loanId) {
-        var confirmation = confirm("¿Estás seguro de que deseas eliminar este préstamo?");
-        if (confirmation) {
-            window.location.href = `/delete-loan?id=${loanId}`;
-        }
     }
     
 </script>
@@ -293,7 +235,7 @@ Ver Préstamos
             {% for p in pagination.iter_pages() %}
                 {% if p %}
                     {% if p != pagination.page %}
-                        <li class="page-item"><a class="page-link" href="{{ url_for('ver_prestamos', page=p) }}">{{ p }}</a></li>
+                        <li class="page-item"><a class="page-link" href="{{ url_for('stock', page=p) }}">{{ p }}</a></li>
                     {% else %}
                         <li class="page-item active"><span class="page-link">{{ p }}</span></li>
                     {% endif %}
