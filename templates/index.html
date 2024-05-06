@@ -1,9 +1,29 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    FuturaLib
+    InvenTech
 {% endblock %}
 
 {% block main %}
-
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <section>
+                    <h1>Bienvenidos a InvenTech</h1>
+                    <p>Tu solución definitiva para la gestión de inventarios.</p>
+                </section>
+                <section>
+                    <h2><a href="/quienes-somos" class="text-danger">Quiénes Somos</a></h2>
+                    <p>InvenTech es una aplicación de gestión de inventarios desarrollada por un grupo de estudiantes del AIEP dedicados a automatizar la administración de stocks en PYMEs. Nuestra plataforma nace con el objetivo de simplificar y optimizar el manejo de inventarios en diversos sectores industriales, ofreciendo una solución accesible y adaptada a los desafíos del mercado actual.</p>
+                </section>
+                <section>
+                    <h2><a href="/faq" class="text-danger">Preguntas Recurrentes</a></h2>
+                    <p>Ingresa aquí para ver las preguntas más recurrentes sobre la aplicación web de <span class="text-danger">InvenTech</span>. En esta sección encontrarás respuestas detalladas que te ayudarán a entender mejor cómo utilizar todas las características de nuestra plataforma. Si tienes alguna duda adicional, no dudes en consultar esta página o contactar con nuestro equipo de soporte.</p>                    
+                </section>
+            </div>
+            <div class="col-md-4">
+                <img src="static/big_inventech.png" alt="Logo de InvenTech" class="img-fluid">
+            </div>
+        </div>
+    </div>
 {% endblock %}

@@ -44,6 +44,7 @@
                     <ul class="navbar-nav me-auto mt-2">
                         {% if session["permission_type"] == "normal" or not session["user_id"] %}
                             <li class="nav-item"><a class="nav-link" href="/quienes-somos">Quiénes Somos</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/faq">Preguntas Recurrentes</a></li>
                         {% endif %}
                         {% if session["user_id"] %}
                             <li class="nav-item"><a class="nav-link" href="/stock">Stock</a></li>

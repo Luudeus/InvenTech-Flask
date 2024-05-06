@@ -299,6 +299,10 @@ def quienes_somos():
     # User reached route via GET (as by clicking a link or via redirect)
     return render_template("quienes-somos.html")
 
+@app.route("/faq", methods=["GET"])
+def faq():
+    # User reached route via GET (as by clicking a link or via redirect)
+    return render_template("faq.html")
 
 @app.route("/stock", methods=["GET"])
 def stock():
